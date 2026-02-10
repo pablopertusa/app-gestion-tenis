@@ -3,6 +3,10 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 import datetime
 
+st.set_page_config(
+    page_title="Tenis Elche - Gestión de Bonos",
+    page_icon="🎾",
+)
 
 def get_service():
     info = dict(st.secrets["gcp_service_account"])
