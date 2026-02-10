@@ -3,118 +3,117 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 import datetime
 
+
 def get_service():
-    # Streamlit busca automáticamente en .streamlit/secrets.toml (local) 
-    # o en los secretos de la web (nube)
     info = dict(st.secrets["gcp_service_account"])
     scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     creds = Credentials.from_service_account_info(info, scopes=scope)
     return build("sheets", "v4", credentials=creds)
 
+service = get_service()
+
+SPREADSHEET_ID = st.secrets["spreadsheet_id"]
+ALL_CLIENTS_RANGE_NAME = "clientes!A:B"
+ALL_CLASSES_RANGE_NAME = "clases!A:C"
+
+def get_all_clients(service):
+    clients = (
+        service.spreadsheets()
+        .values()
+        .get(spreadsheetId = SPREADSHEET_ID, range=ALL_CLIENTS_RANGE_NAME)
+        .execute()
+    )
+    rows = clients.get("values", [])
+    return rows
+
+def get_all_classes(service):
+    classes = (
+        service.spreadsheets()
+        .values()
+        .get(spreadsheetId = SPREADSHEET_ID, range=ALL_CLASSES_RANGE_NAME)
+        .execute()
+    )
+    rows = classes.get("values", [])
+    return rows
+
+def find_name(service, name, column):
+    all_clients = get_all_clients(service)
+    row = 2
+    found = False
+    for c in all_clients[1:]:
+        if c[column] == name:
+            found = True
+            break
+        else:
+            row += 1
+    if found:
+        return row
+
+def read_cell_value(service, spreadsheetId, sheetname, row, column):
+    result = (
+        service.spreadsheets()
+        .values()
+        .get(spreadsheetId = spreadsheetId, range=f"{sheetname}!{column}{row}:{column}{row}")
+        .execute()
+    )
+    row = result.get("values", [])
+    return row
+
+def write_cell_value(service, spreadsheetId, sheetname, row, column, value):
+    result = (
+        service.spreadsheets()
+        .values()
+        .update(
+            spreadsheetId = spreadsheetId,
+            range = f"{sheetname}!{column}{row}:{column}{row}",
+            valueInputOption = "USER_ENTERED",
+            body = {"values": [[value]]}
+        )
+        .execute()
+    )
+    return result
+
+def get_next_row_clients(service):
+    clients = get_all_clients(service)
+    return len(clients) + 1
+
+def get_next_row_classes(service):
+    classes = get_all_classes(service)
+    return len(classes) + 1
+
+def append_client(name, uses, service = service, spreadsheetId = SPREADSHEET_ID):
+    next_row = get_next_row_clients(service)
+    result = (
+        service.spreadsheets()
+        .values()
+        .update(
+            spreadsheetId = spreadsheetId,
+            range = f"clientes!A{next_row}:B{next_row}",
+            valueInputOption = "USER_ENTERED",
+            body = {"values": [[name, uses]]}
+        )
+        .execute()
+    )
+    return result
+
+def append_class(name, monitor, service = service, spreadsheetId = SPREADSHEET_ID):
+    next_row = get_next_row_classes(service)
+    result = (
+        service.spreadsheets()
+        .values()
+        .update(
+            spreadsheetId = spreadsheetId,
+            range = f"clases!A{next_row}:C{next_row}",
+            valueInputOption = "USER_ENTERED",
+            body = {"values": [[name, monitor, datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")]]}
+        )
+        .execute()
+    )
+    return result
+
 password = st.sidebar.text_input("Contraseña de acceso:", type="password")
 
 if password == "tenis":
-
-    service = get_service()
-
-    SPREADSHEET_ID = st.secrets["spreadsheet_id"]
-    ALL_CLIENTS_RANGE_NAME = "clientes!A:B"
-    ALL_CLASSES_RANGE_NAME = "clases!A:C"
-
-    def get_all_clients(service):
-        clients = (
-            service.spreadsheets()
-            .values()
-            .get(spreadsheetId = SPREADSHEET_ID, range=ALL_CLIENTS_RANGE_NAME)
-            .execute()
-        )
-        rows = clients.get("values", [])
-        return rows
-
-    def get_all_classes(service):
-        classes = (
-            service.spreadsheets()
-            .values()
-            .get(spreadsheetId = SPREADSHEET_ID, range=ALL_CLASSES_RANGE_NAME)
-            .execute()
-        )
-        rows = classes.get("values", [])
-        return rows
-
-    def find_name(service, name, column):
-        all_clients = get_all_clients(service)
-        row = 2
-        found = False
-        for c in all_clients[1:]:
-            if c[column] == name:
-                found = True
-                break
-            else:
-                row += 1
-        if found:
-            return row
-
-    def read_cell_value(service, spreadsheetId, sheetname, row, column):
-        result = (
-            service.spreadsheets()
-            .values()
-            .get(spreadsheetId = spreadsheetId, range=f"{sheetname}!{column}{row}:{column}{row}")
-            .execute()
-        )
-        row = result.get("values", [])
-        return row
-
-    def write_cell_value(service, spreadsheetId, sheetname, row, column, value):
-        result = (
-            service.spreadsheets()
-            .values()
-            .update(
-                spreadsheetId = spreadsheetId,
-                range = f"{sheetname}!{column}{row}:{column}{row}",
-                valueInputOption = "USER_ENTERED",
-                body = {"values": [[value]]}
-            )
-            .execute()
-        )
-        return result
-
-    def get_next_row_clients(service):
-        clients = get_all_clients(service)
-        return len(clients) + 1
-
-    def get_next_row_classes(service):
-        classes = get_all_classes(service)
-        return len(classes) + 1
-
-    def append_client(name, uses, service = service, spreadsheetId = SPREADSHEET_ID):
-        next_row = get_next_row_clients(service)
-        result = (
-            service.spreadsheets()
-            .values()
-            .update(
-                spreadsheetId = spreadsheetId,
-                range = f"clientes!A{next_row}:B{next_row}",
-                valueInputOption = "USER_ENTERED",
-                body = {"values": [[name, uses]]}
-            )
-            .execute()
-        )
-        return result
-
-    def append_class(name, monitor, service = service, spreadsheetId = SPREADSHEET_ID):
-        next_row = get_next_row_classes(service)
-        result = (
-            service.spreadsheets()
-            .values()
-            .update(
-                spreadsheetId = spreadsheetId,
-                range = f"clases!A{next_row}:C{next_row}",
-                valueInputOption = "USER_ENTERED",
-                body = {"values": [[name, monitor, datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")]]}
-            )
-            .execute()
-        )
-        return result
 
     st.title("Gestión de Bonos - Tenis Elche")
 
