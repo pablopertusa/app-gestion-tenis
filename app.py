@@ -1,37 +1,23 @@
 import streamlit as st
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
-import json
 import datetime
 
-def get_credentials():
-    data = dict(st.secrets["gcp_service_account"])
+def get_service():
+    # Streamlit busca automáticamente en .streamlit/secrets.toml (local) 
+    # o en los secretos de la web (nube)
+    info = dict(st.secrets["gcp_service_account"])
     scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-    creds = Credentials.from_service_account_info(data, scopes=scope)
-    return creds
-
-def get_credentials_local(filename):
-    with open(filename, "r") as file:
-        data = json.load(file)
-
-    scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-    creds = Credentials.from_service_account_info(data, scopes=scope)
-    return creds
+    creds = Credentials.from_service_account_info(info, scopes=scope)
+    return build("sheets", "v4", credentials=creds)
 
 password = st.sidebar.text_input("Contraseña de acceso:", type="password")
 
 if password == "tenis":
-    local = False
-    st.title("Gestión de Bonos - Tenis Elche")
-    if local:
-        creds = get_credentials_local("gestion-tenis-elche-92bd1d7e8796.json")
-    else:
-        creds = get_credentials()
 
-    creds = get_credentials_local("gestion-tenis-elche-92bd1d7e8796.json")
-    service = build("sheets", "v4", credentials=creds)
+    service = get_service()
 
-    SPREADSHEET_ID = "1Fst1DKSFdbTTEmyrYWqrNlmu_evynOyzm2d1CwLNT5U"
+    SPREADSHEET_ID = st.secrets["spreadsheet_id"]
     ALL_CLIENTS_RANGE_NAME = "clientes!A:B"
     ALL_CLASSES_RANGE_NAME = "clases!A:C"
 
