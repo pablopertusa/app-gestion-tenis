@@ -21,7 +21,7 @@ def get_credentials_local(filename):
 password = st.sidebar.text_input("Contraseña de acceso:", type="password")
 
 if password == "tenis":
-    local = True
+    local = False
     st.title("Gestión de Bonos - Tenis Elche")
     if local:
         creds = get_credentials_local("gestion-tenis-elche-92bd1d7e8796.json")
