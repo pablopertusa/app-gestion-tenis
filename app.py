@@ -153,7 +153,7 @@ try:
         
         if st.button(btn_label):
             if name:
-                row = find_name(service, name, column=0) # Re-verificar al hacer clic
+                row = find_name(service, name, column=0)
                 if row:
                     res = service.spreadsheets().values().get(
                         spreadsheetId=SPREADSHEET_ID, range=f"clientes!B{row}"
@@ -233,7 +233,7 @@ try:
                         write_cell_value(service, SPREADSHEET_ID, "clientes", row, "B", uses - 1)
                         append_class(sel, current_user, ct)
                         st.session_state.asistidos.insert(0, sel)
-                        st.success(f"Asistencia marcada. Quedan {uses-1}.")
+                        st.success(f"Asistencia marcada. Quedan {uses-1} usos.")
 
         if st.session_state.asistidos:
             st.divider()
