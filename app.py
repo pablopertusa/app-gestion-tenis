@@ -6,7 +6,7 @@ import datetime
 
 st.set_page_config(page_title="Tenis Elche - Gestión de Bonos", page_icon="🎾")
 USER_FILE = "users.json"
-CLASS_TYPES = ["Socio", "No socio", "Alumno escuelc", "Clase compartida"]
+CLASS_TYPES = ["Socio", "No socio", "Alumno escuela", "Clase compartida"]
 
 def get_service():
     try:
@@ -133,7 +133,6 @@ try:
 
     with st.spinner('Actualizando conexión con Google Sheets...'):
         users = load_users()
-    st.title("Control de Bonos")
 
     # --- LÓGICA DE RECARGA ---
     def modulo_recarga():
@@ -172,6 +171,7 @@ try:
 
     # --- ENRUTAMIENTO POR ROL ---
     if rol == "Gerente":
+        st.title("Panel de administrador")
         tab1, tab2 = st.tabs(["Gestión de Bonos", "Administrar Usuarios"])
         
         with tab1:
@@ -209,10 +209,11 @@ try:
                         st.rerun()
 
     elif rol == "Recepción":
+        st.title("Panel de recepción")
         modulo_recarga()
 
     elif rol == "Monitor":
-        st.header("Registro de Asistencia")
+        st.title("Registro de Asistencia")
         if 'asistidos' not in st.session_state: st.session_state.asistidos = []
         
         clients = get_all_clients(service)
