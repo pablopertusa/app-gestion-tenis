@@ -19,6 +19,7 @@ service = get_service()
 SPREADSHEET_ID = st.secrets["spreadsheet_id"]
 ALL_CLIENTS_RANGE_NAME = "clientes!A:B"
 ALL_CLASSES_RANGE_NAME = "clases!A:C"
+password = st.secrets["password"]
 
 def get_all_clients(service):
     clients = (
@@ -115,9 +116,9 @@ def append_class(name, monitor, service = service, spreadsheetId = SPREADSHEET_I
     )
     return result
 
-password = st.sidebar.text_input("Contraseña de acceso:", type="password")
+in_password = st.sidebar.text_input("Contraseña de acceso:", type="password")
 
-if password == "tenis":
+if in_password == password:
 
     st.title("Gestión de Bonos - Tenis Elche")
 
